@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Necrotrampa Pitfall Interactiva</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #16213e, #0f3460);
+    border-left: 5px solid #e94560;
+    padding: 18px 24px;
+    margin-bottom: 24px;
+    border-radius: 4px;
+  }
+
+  .header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .header p {
+    font-size: 0.82rem;
+    color: #a0b4c8;
+    margin-top: 4px;
+  }
+
+  /* ── STEPS GRID ── */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 860px) {
+    .steps-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .steps-grid { grid-template-columns: 1fr; }
+  }
+
+  .step-card {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color .25s, transform .2s, box-shadow .2s;
+    position: relative;
+  }
+
+  .step-card:hover, .step-card.active {
+    border-color: #e94560;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(233,69,96,.25);
+  }
+
+  .step-number {
+    display: inline-block;
+    background: #e94560;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .step-card h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #c9d8e8;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+  }
+
+  .step-card .icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .step-card ul {
+    list-style: none;
+    font-size: 0.78rem;
+    color: #8aa0b8;
+    line-height: 1.7;
+  }
+
+  .step-card ul li::before {
+    content: "▸ ";
+    color: #e94560;
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    background: #0d1b2a;
+    border: 1px solid #e94560;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: none;
+    animation: fadeIn .3s ease;
+  }
+
+  .detail-panel.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-panel h2 {
+    font-size: 1rem;
+    color: #e94560;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .detail-panel p {
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: #b0c4d8;
+    margin-bottom: 8px;
+  }
+
+  .detail-panel .note {
+    background: #16213e;
+    border-left: 3px solid #e94560;
+    padding: 10px 14px;
+    border-radius: 3px;
+    font-size: 0.78rem;
+    color: #a0b4c8;
+    margin-top: 10px;
+  }
+
+  /* ── INTERACTIVE PANEL ── */
+  .interactive-panel {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-title {
+    background: #0f3460;
+    padding: 12px 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #7ab3d4;
+  }
+
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid #0f3460;
+  }
+
+  .panel-tab {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    cursor: pointer;
+    text-align: center;
+    color: #6a8a9e;
+    border-right: 1px solid #0f3460;
+    transition: background .2s, color .2s;
+  }
+
+  .panel-tab:last-child { border-right: none; }
+
+  .panel-tab:hover { background: #1e3a5a; color: #c9d8e8; }
+
+  .panel-tab.active {
+    background: #0d1b2a;
+    color: #e94560;
+    border-bottom: 2px solid #e94560;
+  }
+
+  .panel-content {
+    padding: 20px;
+    display: none;
+    animation: fadeIn .25s ease;
+  }
+
+  .panel-content.active { display: block; }
+
+  /* Baits grid */
+  .baits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .bait-card {
+    background: #0d1b2a;
+    border: 1px solid #1e3a5a;
+    border-radius: 8px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+
+  .bait-card:hover, .bait-card.selected {
+    border-color: #e94560;
+    background: #16213e;
+  }
+
+  .bait-card .bait-icon { font-size: 2.4rem; margin-bottom: 8px; }
+
+  .bait-card h4 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #c9d8e8;
+    margin-bottom: 4px;
+  }
+
+  .bait-card p { font-size: 0.72rem; color: #6a8a9e; }
+
+  .bait-info {
+    margin-top: 14px;
+    background: #0d1b2a;
+    border-left: 3px solid #e94560;
+    padding: 12px 16px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    color: #b0c4d8;
+    display: none;
+  }
+
+  .bait-info.visible { display: block; animation: fadeIn .25s ease; }
+
+  /* Preservatives */
+  .preservative-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #1e3a5a;
+  }
+
+  .preservative-row:last-child { border-bottom: none; }
+
+  .preservative-icon {
+    font-size: 1.6rem;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .preservative-row h4 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #c9d8e8;
+    margin-bottom: 3px;
+  }
+
+  .preservative-row p { font-size: 0.76rem; color: #6a8a9e; line-height: 1.5; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-right: 4px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  .tag-green { background: #1a3a2a; color: #4caf88; border: 1px solid #2a5a3a; }
+  .tag-yellow { background: #3a2e10; color: #d4a017; border: 1px solid #5a4820; }
+  .tag-red { background: #3a1010; color: #e94560; border: 1px solid #5a2020; }
+
+  /* FAQ */
+  .faq-item {
+    border-bottom: 1px solid #1e3a5a;
+  }
+
+  .faq-question {
+    padding: 12px 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #c9d8e8;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: color .2s;
+  }
+
+  .faq-question:hover { color: #e94560; }
+
+  .faq-question .arrow {
+    font-size: 0.7rem;
+    transition: transform .25s;
+    color: #e94560;
+  }
+
+  .faq-question.open .arrow { transform: rotate(90deg); }
+
+  .faq-answer {
+    font-size: 0.78rem;
+    color: #8aa0b8;
+    line-height: 1.7;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s ease, padding .3s ease;
+  }
+
+  .faq-answer.open {
+    max-height: 200px;
+    padding-bottom: 12px;
+  }
+
+  /* Diagram legend */
+  .diagram-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .diagram-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #8aa0b8;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #6a8a9e;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color .2s;
+  }
+  .close-btn:hover { color: #e94560; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Construcción de Necrotrampa Tipo Pitfall con Cebo y Cubierta</h1>
+  <p>Entomología Forense · Guía práctica interactiva · Selecciona cada paso para ver los detalles</p>
+</div>
+
+<!-- Steps -->
+<div class="steps-grid">
+
+  <div class="step-card" onclick="toggleStep('step1', this)">
+    <span class="step-number">PASO 1</span>
+    <span class="icon">⛏️</span>
+    <h3>Preparación del Suelo</h3>
+    <ul>
+      <li>Seleccionar sitio adecuado</li>
+      <li>Excavar hoyo del tamaño del recipiente</li>
+      <li>Nivel del suelo al borde</li>
+      <li>Compactar las paredes</li>
+    </ul>
+    <button class="close-btn" onclick="event.stopPropagation(); closeStep('step1')">×</button>
+  </div>
+
+  <div class="step-card" onclick="toggleStep('step2', this)">
+    <span class="step-number">PASO 2</span>
+    <span class="icon">🧪</span>
+    <h3>Fijación y Preservación</h3>
+    <ul>
+      <li>Recipiente principal plástico</li>
+      <li>Líquido preservante al 70%</li>
+      <li>Glicerina/Alcohol + detergente</li>
+      <li>Llenar ⅓ del recipiente</li>
+    </ul>
+    <button class="close-btn" onclick="event.stopPropagation(); closeStep('step2')">×</button>
+  </div>
+
+  <div class="step-card" onclick="toggleStep('step3', this)">
+    <span class="step-number">PASO 3</span>
+    <span class="icon">🥩</span>
+    <h3>Detalle A: Cebo</h3>
+    <ul>
+      <li>Contenedor de cebo perforado</li>
+      <li>Cebo atrayente (carne en descomposición)</li>
+      <li>Rejilla de intercepción</li>
+      <li>Evita que insectos consuman el cebo</li>
+    </ul>
+    <button class="close-btn" onclick="event.stopPropagation(); closeStep('step3')">×</button>
+  </div>
+
+  <div class="step-card" onclick="toggleStep('step4', this)">
+    <span class="step-number">PASO 4</span>
+    <span class="icon">🛡️</span>
+    <h3>Instalación de la Cubierta</h3>
+    <ul>
+      <li>Cubierta protectora plana</li>
+      <li>Soportes de altura (~3 estacas)</li>
+      <li>Flujo de olor atrayente</li>
+      <li>Método de captura por caída</li>
+    </ul>
+    <button class="close-btn" onclick="event.stopPropagation(); closeStep('step4')">×</button>
+  </div>
+
+</div>
+
+<!-- Detail panels -->
+<div id="step1" class="detail-panel">
+  <h2>Paso 1 · Preparación del Suelo</h2>
+  <p>Seleccionar una zona con suelo plano y estable, preferentemente en áreas de actividad de carroñeros o cerca de restos orgánicos. Excavar un hoyo con las mismas dimensiones del recipiente principal para que el borde quede exactamente a nivel del suelo.</p>
+  <p>Compactar bien las paredes laterales para evitar derrumbes. Una trampa bien nivelada garantiza que los artrópodos caigan sin obstáculos.</p>
+  <div class="note">⚠️ El nivel del suelo es crítico: si el borde sobresale, los insectos evitarán la trampa; si está bajo, la tierra caerá dentro.</div>
+</div>
+
+<div id="step2" class="detail-panel">
+  <h2>Paso 2 · Fijación y Preservación</h2>
+  <p>Colocar el recipiente plástico resistente en el hoyo. Agregar el líquido preservante hasta llenar aproximadamente ⅓ de la capacidad total. La fórmula recomendada es:</p>
+  <p><strong style="color:#e94560">Glicerina/Alcohol 70% + 3–5 gotas de detergente</strong></p>
+  <p>El detergente rompe la tensión superficial para que los insectos se hundan rápidamente. El alcohol o glicerina preserva los especímenes en buenas condiciones para análisis forense.</p>
+  <div class="note">🔬 Para colectas en clima cálido se prefiere Glicerina; en clima frío, Alcohol etílico al 70% tiene mejor rendimiento.</div>
+</div>
+
+<div id="step3" class="detail-panel">
+  <h2>Detalle A · Sistema de Cebo</h2>
+  <p>El cebo consiste en un contenedor secundario <strong style="color:#e94560">perforado</strong> (plástico o malla fina) que se ubica sobre el líquido preservante, sostenido por la rejilla de intercepción.</p>
+  <p>Materiales atrayentes comunes: carne fresca o en descomposición, vísceras, pescado o moluscos. Los orificios permiten que el olor se difunda atrayendo insectos, pero impiden que los consuman antes de ser capturados.</p>
+  <div class="note">🪰 La rejilla de intercepción es el componente clave: los insectos intentan acceder al cebo, pierden el equilibrio y caen al líquido preservante.</div>
+</div>
+
+<div id="step4" class="detail-panel">
+  <h2>Paso 4 · Instalación de la Cubierta</h2>
+  <p>La cubierta protectora (plancha plana de plástico, madera o metal) se coloca <strong style="color:#e94560">elevada</strong> sobre la trampa mediante 3 estacas ajustables de ~5–8 cm de altura. Esto:</p>
+  <p>▸ Evita que la lluvia diluya el líquido preservante.<br>
+     ▸ Impide que vertebrados perturben la trampa.<br>
+     ▸ Crea un microambiente oscuro que potencia la atracción del olor.</p>
+  <div class="note">📐 El espacio entre el suelo y la cubierta debe ser suficiente para que los insectos entren libremente (≥ 1.5 cm), pero que bloquee vertebrados pequeños.</div>
+</div>
+
+<!-- Interactive Control Panel -->
+<div class="interactive-panel">
+  <div class="panel-title">▶ Panel de Control Interactivo</div>
+
+  <div class="panel-tabs">
+    <div class="panel-tab active" onclick="switchTab('baits', this)">🥩 Cebos Alternativos</div>
+    <div class="panel-tab" onclick="switchTab('preservatives', this)">🧪 Conservantes</div>
+    <div class="panel-tab" onclick="switchTab('faq', this)">❓ Preguntas Frecuentes</div>
+  </div>
+
+  <!-- TAB 1: Baits -->
+  <div id="tab-baits" class="panel-content active">
+    <div class="baits-grid">
+      <div class="bait-card" onclick="selectBait('higado', this)">
+        <div class="bait-icon">🫀</div>
+        <h4>Hígado</h4>
+        <p>Alta atracción</p>
+      </div>
+      <div class="bait-card" onclick="selectBait('pescado', this)">
+        <div class="bait-icon">🐟</div>
+        <h4>Pescado</h4>
+        <p>Olor penetrante</p>
+      </div>
+      <div class="bait-card" onclick="selectBait('moluscos', this)">
+        <div class="bait-icon">🦪</div>
+        <h4>Moluscos</h4>
+        <p>Descomposición rápida</p>
+      </div>
+    </div>
+    <div id="bait-info" class="bait-info"></div>
+  </div>
+
+  <!-- TAB 2: Preservatives -->
+  <div id="tab-preservatives" class="panel-content">
+
+    <div class="preservative-row">
+      <div class="preservative-icon">🧴</div>
+      <div>
+        <h4>Efecto de lavamiento primario</h4>
+        <p>El líquido preservante puede perder efectividad si se diluye con lluvia o sudoración del suelo. Revisar y reponer cada 48–72 h en condiciones de humedad alta.</p>
+        <span class="tag tag-yellow">Precaución</span><span class="tag tag-green">Revisión regular</span>
+      </div>
+    </div>
+
+    <div class="preservative-row">
+      <div class="preservative-icon">🧼</div>
+      <div>
+        <h4>Líquido preservante + detergente</h4>
+        <p>Fórmula base: Glicerina/Alcohol 70% + 3–5 gotas de detergente sin aroma. El detergente reduce la tensión superficial para que los insectos no escapen.</p>
+        <span class="tag tag-green">Recomendado</span><span class="tag tag-green">Estándar EF</span>
+      </div>
+    </div>
+
+    <div class="preservative-row">
+      <div class="preservative-icon">⚗️</div>
+      <div>
+        <h4>Glicerina 70% + gotas de diásoro</h4>
+        <p>Opción alternativa para colectas de larga duración (> 72 h). Mantiene especímenes blandos y reduce la maceración de tejidos frágiles.</p>
+        <span class="tag tag-green">Larga duración</span><span class="tag tag-yellow">Costo mayor</span>
+      </div>
+    </div>
+
+    <div class="preservative-row">
+      <div class="preservative-icon">🫙</div>
+      <div>
+        <h4>Cerezina/Alcohol 70% + gotas de detergente</h4>
+        <p>Mezcla utilizada en climas fríos (-5 °C a 15 °C). La cerezina actúa como espesante que evita que el líquido se congele y se derrame.</p>
+        <span class="tag tag-green">Clima frío</span><span class="tag tag-red">No en verano</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 3: FAQ -->
+  <div id="tab-faq" class="panel-content">
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        ¿Con qué frecuencia debo revisar la trampa?
+        <span class="arrow">▶</span>
+      </div>
+      <div class="faq-answer">
+        En condiciones normales, revisar cada 24–48 horas. En climas cálidos y húmedos la descomposición del cebo es rápida, por lo que se recomienda revisión diaria. Registrar hora exacta de colecta para análisis del Intervalo Post Mortem (IPM).
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        ¿Qué insectos captura principalmente?
+        <span class="arrow">▶</span>
+      </div>
+      <div class="faq-answer">
+        Principalmente Coleoptera (Silphidae, Dermestidae, Staphylinidae) y Diptera adultos (Calliphoridae, Sarcophagidae). También puede capturar Formicidae y otros artrópodos carroñeros dependiendo del bioma.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        ¿Cómo evitar la contaminación cruzada entre trampas?
+        <span class="arrow">▶</span>
+      </div>
+      <div class="faq-answer">
+        Colocar trampas a un mínimo de 5 metros entre sí. Usar etiquetas codificadas y registrar GPS de cada punto. Cambiar guantes entre colectas. Limpiar con alcohol el instrumental antes de manipular cada trampa.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        ¿El tipo de cebo afecta las especies capturadas?
+        <span class="arrow">▶</span>
+      </div>
+      <div class="faq-answer">
+        Sí. El hígado atrae más Calliphoridae en estados tempranos; el pescado es más efectivo para Silphidae. Para estudios de sucesión completa se recomienda estandarizar el cebo y reemplazarlo en cada revisión con el mismo tipo y cantidad.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        ¿Se puede reutilizar el líquido preservante?
+        <span class="arrow">▶</span>
+      </div>
+      <div class="faq-answer">
+        No se recomienda. Una vez que el líquido preservante ha estado en contacto con especímenes y materia orgánica, su efectividad disminuye y puede contaminar futuras muestras. Siempre usar líquido fresco en cada colecta.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const stepDetails = {
+    step1: document.getElementById('step1'),
+    step2: document.getElementById('step2'),
+    step3: document.getElementById('step3'),
+    step4: document.getElementById('step4'),
+  };
+
+  let activeStep = null;
+  let activeCard = null;
+
+  function toggleStep(id, card) {
+    const panel = stepDetails[id];
+    const isOpen = panel.classList.contains('visible');
+
+    // close all
+    Object.values(stepDetails).forEach(p => p.classList.remove('visible'));
+    document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+
+    if (!isOpen) {
+      panel.classList.add('visible');
+      card.classList.add('active');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      activeStep = id;
+      activeCard = card;
+    } else {
+      activeStep = null;
+      activeCard = null;
+    }
+  }
+
+  function closeStep(id) {
+    stepDetails[id].classList.remove('visible');
+    document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+  }
+
+  function switchTab(name, tab) {
+    document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  const baitData = {
+    higado: {
+      title: 'Hígado',
+      text: 'Cebo de alta eficacia para atraer Calliphoridae (moscas de la carne) y Dermestidae. Ideal para las primeras 24 horas post-instalación. Reemplazar cada 24 h en climas cálidos. Usar ~20–30 g por trampa. Fácil disponibilidad y bajo costo.',
+    },
+    pescado: {
+      title: 'Pescado',
+      text: 'Excelente para capturar Silphidae (escarabajos carroñeros). El olor penetrante atrae insectos a mayor distancia (~3–5 m). Descomposición más lenta que el hígado. Preferido en estudios de sucesión a largo plazo (> 48 h).',
+    },
+    moluscos: {
+      title: 'Moluscos',
+      text: 'Cebo de descomposición rápida (~12 h en clima cálido). Útil para colectas de corta duración o para atraer especies específicas de Staphylinidae. Menor cobertura de especies que hígado o pescado. Usar como complemento o alternativa en entornos costeros.',
+    },
+  };
+
+  function selectBait(id, card) {
+    document.querySelectorAll('.bait-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    const info = document.getElementById('bait-info');
+    const d = baitData[id];
+    info.innerHTML = `<strong style="color:#e94560">${d.title}</strong><br>${d.text}`;
+    info.classList.add('visible');
+  }
+
+  function toggleFaq(el) {
+    const answer = el.nextElementSibling;
+    const isOpen = answer.classList.contains('open');
+    // close all
+    document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('open'));
+    document.querySelectorAll('.faq-question').forEach(q => q.classList.remove('open'));
+    if (!isOpen) {
+      answer.classList.add('open');
+      el.classList.add('open');
+    }
+  }
+</script>
+</body>
+</html>
